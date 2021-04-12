@@ -3,7 +3,6 @@ package main
 import (
 	"time"
 	"webtester/config"
-	"webtester/httpchecker"
 )
 
 func main() {
@@ -12,7 +11,7 @@ func main() {
 
 	for {
 		for _, url := range urls {
-			go httpchecker.WebChecker(url, contacts)
+			go url.WebChecker(contacts)
 		}
 		time.Sleep(300 * time.Second)
 	}

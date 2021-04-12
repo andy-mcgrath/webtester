@@ -3,22 +3,18 @@ package config
 import (
 	"fmt"
 	"log"
+	"webtester/checker"
 	"webtester/sms"
 
 	"github.com/spf13/viper"
 )
 
-type UrlCheck struct {
-	Url           string
-	Substring     string
-	PeriodSeconds int
-}
+type confInterface map[string]interface{}
 
-type domain map[string]interface{}
-
-func GetConfig() ([]sms.SmsContact, []UrlCheck) {
+func GetConfig() ([]sms.SmsContact, []checker.UrlCheck) {
 	contacts := make([]sms.SmsContact, 0)
-	urls := make([]UrlCheck, 0)
+	urls := make([]checker.UrlCheck, 0)
+
 	mainViper := viper.New()
 	mainViper.AddConfigPath(".")
 	mainViper.SetConfigName("config")
@@ -28,8 +24,8 @@ func GetConfig() ([]sms.SmsContact, []UrlCheck) {
 	}
 
 	smsJwt := mainViper.GetString("smsWorks")
-	contactConfigs := make([]domain, 0)
-	webchecks := make([]domain, 0)
+	contactConfigs := make([]confInterface, 0)
+	webchecks := make([]confInterface, 0)
 
 	if err := mainViper.UnmarshalKey("contacts", &contactConfigs); err != nil {
 		log.Fatal(err)
@@ -41,19 +37,18 @@ func GetConfig() ([]sms.SmsContact, []UrlCheck) {
 	for _, v := range contactConfigs {
 		name := fmt.Sprintf("%v", v["name"])
 		dest := fmt.Sprintf("%v", v["destination"])
+
 		fmt.Printf("Adding contact %s\n", name)
 		contacts = append(contacts, sms.NewSmsContact(name, dest, smsJwt))
 	}
+
 	for _, v := range webchecks {
 		url := fmt.Sprintf("%v", v["url"])
 		substring := fmt.Sprintf("%v", v["substring"])
+		period := v["periodSeconds"].(int)
+
 		fmt.Printf("Adding URL to monitor %s, looking for \"%s\"\n", url, substring)
-		temp := UrlCheck{
-			Url:           url,
-			Substring:     substring,
-			PeriodSeconds: v["periodSeconds"].(int),
-		}
-		urls = append(urls, temp)
+		urls = append(urls, checker.NewUrlCheck(url, substring, period))
 	}
 
 	return contacts, urls
