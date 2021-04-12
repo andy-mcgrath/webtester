@@ -1,0 +1,18 @@
+smsWorks: "JWT token from thesmsworks.co.uk"
+
+contacts:
+- name: Bod
+  destination: "445551234"
+- name: Anna
+  destination: "4455543321"
+
+webcheck:
+- url: "https://www.aldi.co.uk/anthracite-rattan-sofa-with-cover/p/710019460866200"
+  substring: "data-is-buy-online=\"true\""
+  periodSeconds: 300
+- url: "https://www.aldi.co.uk/cream-grey-rattan-sofa-with-cover/p/710017460865400"
+  substring: "data-is-buy-online=\"true\""
+  periodSeconds: 300
+- url: "https://www.aldi.co.uk/grey-rattan-sofa-with-cover/p/710018460866000"
+  substring: "data-is-buy-online=\"true\""
+  periodSeconds: 300
