@@ -11,9 +11,9 @@ import (
 
 type confInterface map[string]interface{}
 
-func GetConfig() ([]sms.SmsContact, []checker.UrlCheck) {
-	contacts := make([]sms.SmsContact, 0)
-	urls := make([]checker.UrlCheck, 0)
+func GetConfig() (int, []*sms.SmsContact, []*checker.UrlCheck) {
+	contacts := make([]*sms.SmsContact, 0)
+	urls := make([]*checker.UrlCheck, 0)
 
 	mainViper := viper.New()
 	mainViper.AddConfigPath(".")
@@ -24,6 +24,7 @@ func GetConfig() ([]sms.SmsContact, []checker.UrlCheck) {
 	}
 
 	smsJwt := mainViper.GetString("smsWorks")
+	checkInterval := mainViper.GetInt("interval")
 	contactConfigs := make([]confInterface, 0)
 	webchecks := make([]confInterface, 0)
 
@@ -45,11 +46,10 @@ func GetConfig() ([]sms.SmsContact, []checker.UrlCheck) {
 	for _, v := range webchecks {
 		url := fmt.Sprintf("%v", v["url"])
 		substring := fmt.Sprintf("%v", v["substring"])
-		period := v["periodSeconds"].(int)
 
 		fmt.Printf("Adding URL to monitor %s, looking for \"%s\"\n", url, substring)
-		urls = append(urls, checker.NewUrlCheck(url, substring, period))
+		urls = append(urls, checker.NewUrlCheck(url, substring))
 	}
 
-	return contacts, urls
+	return checkInterval, contacts, urls
 }

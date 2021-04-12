@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 	"webtester/sms"
 )
@@ -16,23 +17,28 @@ type urlContext interface {
 }
 
 type UrlCheck struct {
-	Url           string
-	Substring     string
-	PeriodSeconds int
-	state         bool
+	Url       string
+	Substring string
+	state     bool
+	once      sync.Once
 }
 
-func NewUrlCheck(url, substring string, period int) UrlCheck {
-	return UrlCheck{
-		Url:           url,
-		Substring:     substring,
-		PeriodSeconds: period,
-		state:         true,
+func NewUrlCheck(url, substring string) *UrlCheck {
+	return &UrlCheck{
+		Url:       url,
+		Substring: substring,
+		state:     false,
 	}
 }
 
 func (u *UrlCheck) checkCtxChanged(htmlBody string) bool {
 	subStringFound := strings.Contains(htmlBody, u.Substring)
+
+	u.once.Do(
+		func() {
+			fmt.Printf("Initialising state for %s to %t\n", u.Url, subStringFound)
+			u.state = subStringFound
+		})
 
 	if subStringFound != u.state {
 		u.state = subStringFound
@@ -41,7 +47,7 @@ func (u *UrlCheck) checkCtxChanged(htmlBody string) bool {
 	return false
 }
 
-func (u UrlCheck) WebChecker(contacts []sms.SmsContact) {
+func (u *UrlCheck) WebChecker(contacts []*sms.SmsContact) {
 	method := "GET"
 	client := &http.Client{Timeout: 5000 * time.Millisecond}
 	req, err := http.NewRequest(method, u.Url, nil)
