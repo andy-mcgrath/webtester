@@ -47,7 +47,7 @@ func (u *UrlCheck) checkCtxChanged(htmlBody string) bool {
 	return false
 }
 
-func (u *UrlCheck) WebChecker(contacts []sms.SmsContact) {
+func (u *UrlCheck) WebChecker(contacts []*sms.SmsContact) {
 	method := "GET"
 	client := &http.Client{Timeout: 5000 * time.Millisecond}
 	req, err := http.NewRequest(method, u.Url, nil)

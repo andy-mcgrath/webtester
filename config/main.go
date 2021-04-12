@@ -11,8 +11,8 @@ import (
 
 type confInterface map[string]interface{}
 
-func GetConfig() (int, []sms.SmsContact, []*checker.UrlCheck) {
-	contacts := make([]sms.SmsContact, 0)
+func GetConfig() (int, []*sms.SmsContact, []*checker.UrlCheck) {
+	contacts := make([]*sms.SmsContact, 0)
 	urls := make([]*checker.UrlCheck, 0)
 
 	mainViper := viper.New()

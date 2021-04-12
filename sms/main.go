@@ -16,8 +16,8 @@ type SmsContact struct {
 	*smsAuth
 }
 
-func NewSmsContact(name, destination, smsJwt string) SmsContact {
-	return SmsContact{
+func NewSmsContact(name, destination, smsJwt string) *SmsContact {
+	return &SmsContact{
 		name:        name,
 		destination: destination,
 		smsAuth:     SetInstance(smsJwt),
