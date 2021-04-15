@@ -7,25 +7,43 @@ import (
 )
 
 type SmsSenter interface {
-	Send() error
+	Send(string) error
+}
+
+type Contacts struct {
+	smsContact []*SmsContact
+	*smsAuth
 }
 
 type SmsContact struct {
 	name        string
 	destination string
-	*smsAuth
 }
 
-func NewSmsContact(name, destination, smsJwt string) *SmsContact {
-	return &SmsContact{
-		name:        name,
-		destination: destination,
-		smsAuth:     SetInstance(smsJwt),
+func NewContacts(smsJwt string, contacts []*SmsContact) *Contacts {
+	return &Contacts{
+		smsAuth:    SetInstance(smsJwt),
+		smsContact: contacts,
 	}
 }
 
-func (sms *SmsContact) Send(message string) error {
+func NewSmsContact(name, destination string) *SmsContact {
+	return &SmsContact{
+		name:        name,
+		destination: destination,
+	}
+}
 
+func (c *Contacts) Send(message string) error {
+	for _, contact := range c.smsContact {
+		if err := contact.Send(c.smsAuth.jwt, message); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (sms *SmsContact) Send(auth, message string) error {
 	url := "https://api.thesmsworks.co.uk/v1/message/send"
 	method := "POST"
 
@@ -43,7 +61,7 @@ func (sms *SmsContact) Send(message string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Add("Authorization", sms.smsAuth.jwt)
+	req.Header.Add("Authorization", auth)
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
