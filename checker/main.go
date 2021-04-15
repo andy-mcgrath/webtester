@@ -8,12 +8,10 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"webtester/sms"
 )
 
-type urlContext interface {
-	WebChecker([]sms.SmsContact)
-	checkCtxChanged() bool
+type Icontact interface {
+	Send(string) error
 }
 
 type UrlCheck struct {
@@ -21,13 +19,15 @@ type UrlCheck struct {
 	Substring string
 	state     bool
 	once      sync.Once
+	Icontact
 }
 
-func NewUrlCheck(url, substring string) *UrlCheck {
+func NewUrlCheck(url, substring string, contact Icontact) *UrlCheck {
 	return &UrlCheck{
 		Url:       url,
 		Substring: substring,
 		state:     false,
+		Icontact:  contact,
 	}
 }
 
@@ -47,7 +47,7 @@ func (u *UrlCheck) checkCtxChanged(htmlBody string) bool {
 	return false
 }
 
-func (u *UrlCheck) WebChecker(contacts []*sms.SmsContact) {
+func (u *UrlCheck) WebChecker() {
 	method := "GET"
 	client := &http.Client{Timeout: 5000 * time.Millisecond}
 	req, err := http.NewRequest(method, u.Url, nil)
@@ -72,12 +72,10 @@ func (u *UrlCheck) WebChecker(contacts []*sms.SmsContact) {
 
 		if u.checkCtxChanged(string(bodyBytes)) {
 			fmt.Printf("Item %s state changed to %t.\n", u.Url, u.state)
-			if u.state == true {
-				for _, contact := range contacts {
-					message := fmt.Sprintf("Item %s is IN STOCK!", u.Url)
-					if err := contact.Send(message); err != nil {
-						log.Fatal(err)
-					}
+			if u.state {
+				message := fmt.Sprintf("Item %s is IN STOCK!", u.Url)
+				if err := u.Icontact.Send(message); err != nil {
+					log.Fatal(err)
 				}
 			}
 		} else {
